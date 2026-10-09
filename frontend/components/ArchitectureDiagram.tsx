@@ -2,9 +2,10 @@
 
 // Isometric 3D architecture: CSS 3D boxes on a tilted floor, data paths drawn
 // as wiring on the floor and animated in the direction data flows. Click a
-// block to see what it does and what the agent asks of it.
+// block to see what it does and what the agent asks of it; drag the floor
+// (or use the buttons) to rotate and tilt it.
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 type Id = "target" | "prom" | "am" | "grafana" | "loki" | "lens" | "ui" | "pg";
 type Node = { id: Id; x: number; y: number; title: string; sub: string; brand?: boolean; tall?: boolean };
@@ -75,18 +76,53 @@ const INFO: Record<Id, { role: string; body: string; detail?: string }> = {
   },
 };
 
+const DEFAULT_VIEW = { tilt: 56, spin: -36 };
+const TILT_MIN = 15, TILT_MAX = 72;
+const clampTilt = (t: number) => Math.min(TILT_MAX, Math.max(TILT_MIN, t));
+
 const TITLE = Object.fromEntries(NODES.map((n) => [n.id, n.title])) as Record<Id, string>;
 
 export function ArchitectureDiagram() {
   const [sel, setSel] = useState<Id>("lens");
+  const [view, setView] = useState(DEFAULT_VIEW);
+  const [dragging, setDragging] = useState(false);
+  const drag = useRef<{ x: number; y: number; tilt: number; spin: number; moved: boolean } | null>(null);
+
+  // Drag anywhere on the stage to rotate. A press that barely moves stays a
+  // click, so selecting a block still works.
+  const onPointerDown = (e: React.PointerEvent) => {
+    if (e.button !== 0) return;
+    drag.current = { x: e.clientX, y: e.clientY, ...view, moved: false };
+  };
+  const onPointerMove = (e: React.PointerEvent) => {
+    const d = drag.current;
+    if (!d) return;
+    const dx = e.clientX - d.x, dy = e.clientY - d.y;
+    if (!d.moved && Math.hypot(dx, dy) < 5) return;
+    if (!d.moved) {
+      d.moved = true;
+      setDragging(true);
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    }
+    setView({ spin: d.spin + dx * 0.35, tilt: clampTilt(d.tilt - dy * 0.25) });
+  };
+  const endDrag = () => {
+    drag.current = null;
+    // Let the click that ends a drag fire first, then re-enable selection.
+    setTimeout(() => setDragging(false), 0);
+  };
+  const select = (id: Id) => { if (!dragging) setSel(id); };
+  const rotate = (deg: number) => setView((v) => ({ ...v, spin: v.spin + deg }));
+  const changed = view.tilt !== DEFAULT_VIEW.tilt || view.spin !== DEFAULT_VIEW.spin;
   const linked = (e: Edge) => e.from === sel || e.to === sel;
   const neighbours = EDGES.filter(linked).map((e) => (e.from === sel ? e.to : e.from));
   const info = INFO[sel];
 
   return (
     <div className="iso-wrap">
-      <div className="iso-stage">
-        <div className="iso-plane">
+      <div className={`iso-stage ${dragging ? "is-dragging" : ""}`}
+        onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={endDrag} onPointerCancel={endDrag}>
+        <div className="iso-plane" style={{ "--tilt": `${view.tilt}deg`, "--spin": `${view.spin}deg` } as React.CSSProperties}>
           <svg className="iso-wires" viewBox="0 0 820 640" aria-hidden>
             <defs>
               <marker id="iso-arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
@@ -113,7 +149,7 @@ export function ArchitectureDiagram() {
           {NODES.map((n) => {
             const state = n.id === sel ? "selected" : neighbours.includes(n.id) ? "linked" : "dim";
             return (
-              <button key={n.id} type="button" onClick={() => setSel(n.id)} aria-pressed={n.id === sel}
+              <button key={n.id} type="button" onClick={() => select(n.id)} aria-pressed={n.id === sel}
                 aria-label={`${n.title}: ${INFO[n.id].role}`}
                 className={`block ${n.brand ? "block-brand" : ""} ${n.tall ? "block-tall" : ""} is-${state}`}
                 style={{ left: n.x, top: n.y, width: W, height: H }}>
@@ -129,6 +165,23 @@ export function ArchitectureDiagram() {
             );
           })}
         </div>
+      </div>
+
+      <div className="iso-controls" role="group" aria-label="Rotate the diagram">
+        <button type="button" onClick={() => rotate(-45)} aria-label="Rotate left" title="Rotate left">
+          <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden><path d="M4 9a6 6 0 1 1 2 5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /><path d="M4 4v5h5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+        </button>
+        <button type="button" onClick={() => rotate(45)} aria-label="Rotate right" title="Rotate right">
+          <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden><path d="M16 9a6 6 0 1 0-2 5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /><path d="M16 4v5h-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+        </button>
+        <button type="button" onClick={() => setView((v) => ({ ...v, tilt: clampTilt(v.tilt - 12) }))} aria-label="Tilt flatter" title="Tilt flatter">
+          <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden><path d="M3 13h14M6 9h8" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>
+        </button>
+        <button type="button" onClick={() => setView((v) => ({ ...v, tilt: clampTilt(v.tilt + 12) }))} aria-label="Tilt steeper" title="Tilt steeper">
+          <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden><path d="M6 15h8M8 11h4M9.5 7h1" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>
+        </button>
+        <button type="button" onClick={() => setView(DEFAULT_VIEW)} disabled={!changed} className="reset">Reset view</button>
+        <span className="iso-drag-hint">or drag to rotate</span>
       </div>
 
       <aside className="iso-panel" aria-live="polite">

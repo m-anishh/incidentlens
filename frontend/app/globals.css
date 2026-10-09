@@ -472,7 +472,8 @@ table.incidents .cause { color: var(--text); margin-right: 8px; }
   --depth: 22px;
   position: relative; width: 820px; height: 640px; flex: none;
   transform-style: preserve-3d;
-  transform: translate(7%, -3%) rotateX(56deg) rotateZ(-36deg) scale(0.86);
+  transform: translate(7%, -3%) rotateX(var(--tilt, 56deg)) rotateZ(var(--spin, -36deg)) scale(0.86);
+  transition: transform 0.6s cubic-bezier(.2, .7, .2, 1);
   border-radius: 28px;
   background-color: rgba(255, 255, 255, 0.55);
   background-image: radial-gradient(rgba(31, 111, 235, 0.22) 1.2px, transparent 1.4px);
@@ -593,3 +594,26 @@ button.block:focus-visible .face.top { outline: 3px solid var(--brand); outline-
 }
 @media (max-width: 760px) { .iso-plane { zoom: 0.6; } }
 @media (max-width: 520px) { .iso-plane { zoom: 0.42; } .iso-legend { gap: 10px 14px; font-size: 0.72rem; } }
+
+/* rotation: drag the stage, or use the controls */
+.iso-stage { cursor: grab; touch-action: pan-y; user-select: none; -webkit-user-select: none; }
+.iso-stage.is-dragging { cursor: grabbing; }
+.iso-stage.is-dragging .iso-plane { transition: none; }
+.iso-stage.is-dragging .block { pointer-events: none; }
+.iso-controls {
+  position: absolute; top: 24px; left: 24px; display: flex; align-items: center; gap: 6px; padding: 6px;
+  background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--line); border-radius: 999px; box-shadow: 0 8px 24px rgba(13, 26, 43, 0.08); z-index: 2;
+}
+.iso-controls button {
+  display: inline-flex; align-items: center; justify-content: center; height: 34px; min-width: 34px; padding: 0 10px;
+  border-radius: 999px; border: 0; background: transparent; color: var(--text); cursor: pointer; font: 500 0.8rem var(--font-mono);
+}
+.iso-controls button:hover:not(:disabled) { background: var(--brand-soft); color: var(--brand-strong); }
+.iso-controls button:disabled { color: var(--faint); cursor: default; }
+.iso-controls .reset { border-left: 1px solid var(--line); border-radius: 0 999px 999px 0; padding-left: 12px; }
+.iso-drag-hint { font: 0.74rem var(--font-mono); color: var(--faint); padding: 0 10px 0 4px; }
+@media (max-width: 1060px) {
+  .iso-controls { display: none; }
+  .iso-stage { cursor: default; }
+}
