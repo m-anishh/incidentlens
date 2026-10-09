@@ -304,3 +304,46 @@ table.incidents .cause { color: var(--text); margin-right: 8px; }
   .counters { width: 100%; }
   .counter { min-width: 0; flex: 1; padding: 8px 10px; }
 }
+
+/* ---------- dashboard: incident detail ---------- */
+.detail .back { display: inline-block; margin-bottom: 14px; color: var(--muted); }
+.block { padding: 22px 0; border-top: 1px solid var(--line); }
+.block:first-of-type { border-top: 0; padding-top: 0; }
+.block-head { margin-bottom: 12px; }
+.block-lead { margin: -4px 0 12px; max-width: 46rem; }
+.detail-title { font-size: 1.5rem; }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 1px; margin: 16px 0 0; background: var(--line); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+.facts > div { background: var(--surface); padding: 10px 14px; }
+.facts dt { font-size: 0.74rem; color: var(--muted); }
+.facts dd { margin: 2px 0 0; font-size: 0.86rem; }
+.conclusion { display: grid; grid-template-columns: 1.4fr 1fr; gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--radius-lg); overflow: hidden; }
+.conclusion > div { background: var(--surface); padding: 16px 18px; }
+.conclusion > div > * + * { margin-top: 8px; }
+.hypothesis-cause { font-size: 1.12rem; font-weight: 500; }
+.fix { border-left: 3px solid var(--ok); }
+.prose { white-space: pre-wrap; }
+.gaps { margin-top: 12px; }
+.gaps ul { margin: 6px 0 0; padding-left: 18px; color: var(--muted); font-size: 0.88rem; }
+@media (max-width: 800px) { .conclusion { grid-template-columns: 1fr; } }
+.detail .trace-list { padding: 16px 18px 8px; }
+.detail .trace-row { padding-bottom: 18px; }
+.detail .trace-step { font-size: 0.92rem; }
+.detail .trace-detail { font-size: 0.82rem; }
+.trace-detail-grid { display: grid; gap: 10px; margin-top: 12px; }
+.trace-detail-grid details > summary { list-style-position: inside; }
+.trace-detail-grid details[open] > summary { border-bottom: 1px solid var(--line); }
+table.data.compact td, table.data.compact th { padding: 6px 12px; }
+.cited { margin: 0; padding-left: 18px; font-size: 0.88rem; }
+.cited li + li { margin-top: 6px; }
+.reasoning .prose { font-size: 0.88rem; }
+.sub { font-size: 0.86rem; color: var(--muted); font-weight: 500; margin: 18px 0 8px; }
+.ratio { color: var(--warn); }
+.linkish { background: none; border: 0; color: var(--brand); cursor: pointer; padding: 8px 0; font: 0.84rem var(--font-sans); }
+.linkish:hover { text-decoration: underline; }
+.sparks { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
+.spark { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px; }
+.spark-labels { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.logpattern { border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); padding: 10px 12px; font-size: 0.86rem; }
+.logpattern + .logpattern { margin-top: 8px; }
+.logline { margin-top: 6px; font-size: 0.74rem; color: var(--muted); background: var(--ink); border: 1px solid var(--line-soft); border-radius: 4px; padding: 6px 8px; }
+table.data tr.selected td { background: var(--brand-wash); }
