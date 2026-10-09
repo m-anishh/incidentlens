@@ -1,0 +1,12 @@
+route:
+  receiver: incidentlens
+  group_by: [alertname, service]
+  group_wait: 10s
+  group_interval: 1m
+  repeat_interval: 4h
+
+receivers:
+  - name: incidentlens
+    webhook_configs:
+      - url: http://incidentlens:8000/webhook/alertmanager
+        send_resolved: true

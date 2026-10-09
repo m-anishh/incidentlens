@@ -1,0 +1,185 @@
+name: incidentlens
+
+services:
+  # ---------------------------------------------------------------- target system
+  orders-api:
+    build: ./target-system/orders-api
+    environment:
+      SERVICE_NAME: orders-api
+      DATABASE_URL: postgresql://${TARGET_DB_USER}:${TARGET_DB_PASSWORD}@target-postgres:5432/${TARGET_DB_NAME}
+      REDIS_URL: redis://redis:6379/0
+      INVENTORY_URL: http://inventory-service:8000
+      DB_POOL_SIZE: ${DB_POOL_SIZE:-5}
+      DB_POOL_TIMEOUT_S: ${DB_POOL_TIMEOUT_S:-2}
+      DB_HOLD_MS: ${DB_HOLD_MS:-100}
+      INVENTORY_TIMEOUT_S: ${INVENTORY_TIMEOUT_S:-3}
+    ports: ["8000:8000"]
+    depends_on:
+      target-postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      inventory-service: { condition: service_healthy }
+    healthcheck: &py_health
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/healthz')"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  inventory-service:
+    build: ./target-system/inventory-service
+    environment:
+      SERVICE_NAME: inventory-service
+    ports: ["8001:8000"]
+    healthcheck: *py_health
+
+  target-postgres:
+    image: postgres:16-alpine
+    command: ["postgres", "-c", "shared_preload_libraries=pg_stat_statements", "-c", "pg_stat_statements.track=all"]
+    environment:
+      POSTGRES_USER: ${TARGET_DB_USER}
+      POSTGRES_PASSWORD: ${TARGET_DB_PASSWORD}
+      POSTGRES_DB: ${TARGET_DB_NAME}
+    volumes:
+      - ./target-system/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${TARGET_DB_USER} -d ${TARGET_DB_NAME}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7.4-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:v0.16.0
+    command: ["--collector.stat_statements"]
+    environment:
+      DATA_SOURCE_NAME: postgresql://${TARGET_DB_USER}:${TARGET_DB_PASSWORD}@target-postgres:5432/${TARGET_DB_NAME}?sslmode=disable
+    depends_on:
+      target-postgres: { condition: service_healthy }
+
+  redis-exporter:
+    image: oliver006/redis_exporter:v1.67.0
+    environment:
+      REDIS_ADDR: redis://redis:6379
+
+  loadgen:
+    image: grafana/k6:0.56.0
+    command: ["run", "--quiet", "/scripts/steady.js"]
+    environment:
+      ORDERS_URL: http://orders-api:8000
+      GET_RATE: ${LOADGEN_GET_RATE:-45}
+      LIST_RATE: ${LOADGEN_LIST_RATE:-3}
+      CREATE_RATE: ${LOADGEN_CREATE_RATE:-3}
+    volumes:
+      - ./target-system/loadgen:/scripts:ro
+    depends_on:
+      orders-api: { condition: service_healthy }
+    restart: unless-stopped
+
+  # Scenario 1 only: docker compose --profile burst run --rm loadgen-burst
+  loadgen-burst:
+    image: grafana/k6:0.56.0
+    profiles: ["burst"]
+    command: ["run", "--quiet", "/scripts/burst.js"]
+    environment:
+      ORDERS_URL: http://orders-api:8000
+      BURST_RATE: ${LOADGEN_BURST_RATE:-60}
+    volumes:
+      - ./target-system/loadgen:/scripts:ro
+
+  # ------------------------------------------------------------------- monitoring
+  prometheus:
+    image: prom/prometheus:v3.1.0
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.retention.time=15d
+    volumes:
+      - ./monitoring/prometheus:/etc/prometheus:ro
+      - prometheus-data:/prometheus
+    ports: ["9090:9090"]
+
+  alertmanager:
+    image: prom/alertmanager:v0.28.0
+    command: ["--config.file=/etc/alertmanager/alertmanager.yml"]
+    volumes:
+      - ./monitoring/alertmanager:/etc/alertmanager:ro
+    ports: ["9093:9093"]
+
+  loki:
+    image: grafana/loki:3.3.2
+    command: ["-config.file=/etc/loki/loki.yml"]
+    volumes:
+      - ./monitoring/loki:/etc/loki:ro
+      - loki-data:/loki
+    ports: ["3100:3100"]
+
+  alloy:
+    image: grafana/alloy:v1.6.1
+    command: ["run", "--server.http.listen-addr=0.0.0.0:12345", "/etc/alloy/config.alloy"]
+    volumes:
+      - ./monitoring/alloy:/etc/alloy:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    ports: ["12345:12345"]
+    depends_on: [loki]
+
+  grafana:
+    image: grafana/grafana:11.4.0
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/target-system.json
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports: ["3001:3000"]
+
+  # ------------------------------------------------------------------------ agent
+  incidentlens-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${AGENT_DB_USER}
+      POSTGRES_PASSWORD: ${AGENT_DB_PASSWORD}
+      POSTGRES_DB: ${AGENT_DB_NAME}
+    volumes:
+      - agent-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${AGENT_DB_USER} -d ${AGENT_DB_NAME}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  incidentlens:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${AGENT_DB_USER}:${AGENT_DB_PASSWORD}@incidentlens-db:5432/${AGENT_DB_NAME}
+      PROMETHEUS_URL: http://prometheus:9090
+      LOKI_URL: http://loki:3100
+      LLM_PROVIDER: ${LLM_PROVIDER:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      LLM_MODEL: ${LLM_MODEL:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-}
+      BEDROCK_REGION: ${BEDROCK_REGION:-}
+      BEDROCK_MODEL: ${BEDROCK_MODEL:-}
+    ports: ["8080:8000"]
+    depends_on:
+      incidentlens-db: { condition: service_healthy }
+
+  incidentlens-ui:
+    build: ./frontend
+    environment:
+      BACKEND_URL: http://incidentlens:8000
+    ports: ["3000:3000"]
+    depends_on: [incidentlens]
+
+volumes:
+  prometheus-data:
+  loki-data:
+  agent-db-data:
