@@ -103,26 +103,26 @@ export default function IncidentList() {
                     <td className="nowrap">
                       <span className="faint mono small">#{i.id}</span> <span className="strong">{i.alertname}</span>
                     </td>
-                    <td className="mono small">
+                    <td className="mono small" data-label="Service and route">
                       {i.service ?? "—"}
                       {i.labels.route && <span className="muted"> {i.labels.method} {i.labels.route}</span>}
                     </td>
-                    <td><AlertBadge open={i.open} /></td>
-                    <td>
+                    <td data-label="Alert state"><AlertBadge open={i.open} /></td>
+                    <td data-label="Investigation">
                       <div className="cell-stack">
                         <RunBadge status={r?.status ?? "none"} />
                         {r?.weak_baseline && <WeakBaselineBadge />}
                         {i.run_count > 1 && <span className="faint small">{i.run_count} runs</span>}
                       </div>
                     </td>
-                    <td className="summary">
+                    <td className="summary" data-label="Summary">
                       {r?.summary
                         ? <>{r.cause_service && <span className="mono cause">{r.cause_service}</span>}{r.summary}</>
                         : r?.status === "failed"
                           ? <span className="error">Failed at {r.error?.step ?? "unknown step"}</span>
                           : <span className="faint">—</span>}
                     </td>
-                    <td className="nowrap mono small" title={time(i.starts_at)}>{ago(i.starts_at)}</td>
+                    <td className="nowrap mono small" data-label="Started" title={time(i.starts_at)}>{ago(i.starts_at)}</td>
                   </tr>
                 );
               })}

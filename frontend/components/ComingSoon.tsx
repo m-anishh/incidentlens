@@ -1,10 +1,8 @@
 export function ComingSoon({ title, line, compact }: { title: string; line: string; compact?: boolean }) {
   return (
     <div className={`soon ${compact ? "soon-compact" : ""}`} aria-disabled="true">
-      <div className="spread">
-        <span className="soon-title">{title}</span>
-        <span className="tag-soon">COMING SOON</span>
-      </div>
+      <span className="tag-soon">COMING SOON</span>
+      <span className="soon-title">{title}</span>
       <p className="soon-line">{line}</p>
     </div>
   );

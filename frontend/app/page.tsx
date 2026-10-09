@@ -40,22 +40,25 @@ export default function Landing() {
             <Link href="/incidents" className="btn btn-primary">Open dashboard</Link>
             <Link href="/#how-it-works" className="btn">See how it works</Link>
           </div>
+          <p className="hero-stack">
+            Prometheus <i /> Loki <i /> Alertmanager <i /> FastAPI <i /> Bedrock <i /> Docker Compose
+          </p>
         </div>
         <HeroTrace />
       </section>
       </div>
 
       {/* 2 — stats */}
-      <StatsStrip />
+      <div className="wrap"><StatsStrip /></div>
 
       {/* 3 — problem */}
       <section className="section wrap" aria-labelledby="problem">
         <p className="eyebrow">The problem</p>
         <h2 id="problem" className="section-title">Diagnosis is the slow part of an outage</h2>
-        <ol className="numbered three">
+        <ol className="editorial">
           {PROBLEMS.map(([title, body], i) => (
             <li key={title}>
-              <span className="num mono">{String(i + 1).padStart(2, "0")}</span>
+              <span className="big-num mono">{String(i + 1).padStart(2, "0")}</span>
               <h3>{title}</h3>
               <p className="muted">{body}</p>
             </li>
@@ -64,18 +67,20 @@ export default function Landing() {
       </section>
 
       {/* 4 — how it works */}
-      <section id="how-it-works" className="section wrap" aria-labelledby="how">
+      <section id="how-it-works" className="band" aria-labelledby="how">
+        <div className="wrap">
         <p className="eyebrow">How it works</p>
         <h2 id="how" className="section-title">From alert to explained cause, without anyone pressing a button</h2>
-        <ol className="numbered steps">
+        <ol className="timeline">
           {STEPS.map(([title, body], i) => (
             <li key={title}>
-              <span className="num mono">{String(i + 1).padStart(2, "0")}</span>
+              <span className="step-dot mono">{String(i + 1).padStart(2, "0")}</span>
               <h3>{title}</h3>
               <p className="muted">{body}</p>
             </li>
           ))}
         </ol>
+        </div>
       </section>
 
       {/* 5 — scenarios */}
@@ -96,11 +101,11 @@ export default function Landing() {
                 <span className={`badge st-${s.result}`}>{RESULT_LABEL[s.result]}</span>
               </div>
               <h3>{s.title}</h3>
+              <p className="scenario-broken">{s.broken}</p>
+              <code className="scenario-cmd">{s.induce}</code>
               <dl className="scenario-dl">
-                <dt>What breaks</dt><dd>{s.broken}</dd>
-                <dt>Induced by</dt><dd className="mono">{s.induce}</dd>
-                <dt>Correct conclusion</dt><dd>{s.expected}</dd>
-                <dt>What the agent concluded</dt><dd className={s.result === "pending" ? "muted" : ""}>{s.observed}</dd>
+                <div><dt>Correct conclusion</dt><dd>{s.expected}</dd></div>
+                <div className="observed"><dt>What the agent concluded</dt><dd className={s.result === "pending" ? "muted" : ""}>{s.observed}</dd></div>
               </dl>
             </article>
           ))}
@@ -108,7 +113,8 @@ export default function Landing() {
       </section>
 
       {/* 6 — architecture */}
-      <section id="architecture" className="section wrap" aria-labelledby="arch">
+      <section id="architecture" className="band" aria-labelledby="arch">
+        <div className="wrap">
         <p className="eyebrow">Architecture</p>
         <h2 id="arch" className="section-title">The agent learns about the system only the way an engineer would</h2>
         <p className="muted section-lead">
@@ -116,6 +122,7 @@ export default function Landing() {
           that starts before the alert so the onset is in view. One Compose file runs it locally and on a single EC2 instance.
         </p>
         <ArchitectureDiagram />
+        </div>
       </section>
 
       {/* roadmap — visible, dimmed, not working */}

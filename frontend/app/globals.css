@@ -42,7 +42,7 @@
 }
 
 * { box-sizing: border-box; }
-html { scroll-behavior: smooth; scroll-padding-top: 96px; }
+html { scroll-behavior: smooth; scroll-padding-top: 0; }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.6 var(--font-sans); -webkit-font-smoothing: antialiased; }
 
@@ -382,3 +382,79 @@ table.incidents .cause { color: var(--text); margin-right: 8px; }
 .settings-h { font: 500 0.88rem var(--font-mono); color: var(--muted); }
 
 .trace-body { min-width: 0; }
+
+/* ============================== landing polish ============================== */
+/* hero: what it runs on */
+.hero-stack { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; font: 0.8rem var(--font-mono); color: var(--faint); padding-top: 8px; }
+.hero-stack i { width: 4px; height: 4px; border-radius: 50%; background: #c3cdda; display: inline-block; }
+
+/* full-width white bands give the page rhythm */
+.band { margin-top: 120px; padding: 128px 0 112px; background: var(--surface); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.band + .section { padding-top: 112px; }
+
+/* problem: editorial, no boxes */
+.editorial { list-style: none; padding: 0; margin: 48px 0 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 48px; }
+.editorial li { border-top: 2px solid var(--text); padding-top: 22px; }
+.editorial .big-num { display: block; font-size: 2.6rem; line-height: 1; color: var(--brand); letter-spacing: -0.04em; }
+.editorial h3 { margin: 18px 0 10px; font-size: 1.2rem; }
+.editorial p { font-size: 0.98rem; }
+@media (max-width: 860px) { .editorial { grid-template-columns: 1fr; gap: 36px; } }
+
+/* how it works: one connected line, four stops */
+.timeline { list-style: none; padding: 0; margin: 56px 0 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 32px; position: relative; }
+/* connector from each stop to the next — none after the last */
+.timeline li:not(:last-child)::after { content: ""; position: absolute; top: 22px; left: 46px; right: -32px; height: 2px; background: linear-gradient(90deg, var(--brand), var(--brand-line)); }
+.timeline li { position: relative; }
+.step-dot { position: relative; z-index: 1; display: inline-flex; align-items: center; justify-content: center; width: 46px; height: 46px; border-radius: 50%; background: var(--surface); border: 2px solid var(--brand); color: var(--brand-strong); font-size: 0.85rem; font-weight: 500; box-shadow: 0 0 0 6px var(--surface); }
+.timeline h3 { margin: 22px 0 10px; font-size: 1.15rem; }
+.timeline p { font-size: 0.95rem; }
+@media (max-width: 960px) {
+  .timeline { grid-template-columns: 1fr; gap: 28px; padding-left: 64px; }
+  .timeline li:not(:last-child)::after { top: 40px; bottom: -34px; left: -42px; right: auto; width: 2px; height: auto; background: linear-gradient(180deg, var(--brand), var(--brand-line)); }
+  .timeline li .step-dot { position: absolute; left: -64px; top: -6px; }
+  .timeline h3 { margin-top: 4px; }
+}
+
+/* scenarios: lead with what breaks, then the answer key */
+.scenario { display: flex; flex-direction: column; }
+.scenario h3 { margin: 16px 0 8px; font-size: 1.3rem; letter-spacing: -0.02em; }
+.scenario-broken { color: var(--muted); font-size: 0.98rem; }
+.scenario-cmd { align-self: flex-start; margin-top: 14px; font-size: 0.8rem; padding: 5px 10px; border-radius: 8px; }
+.scenario-dl { display: grid; grid-template-columns: 1fr; gap: 0; margin: 20px 0 0; border-top: 1px solid var(--line); font-size: 0.94rem; }
+.scenario-dl > div { padding: 14px 0 0; }
+.scenario-dl > div + div { margin-top: 14px; border-top: 1px dashed var(--line); }
+.scenario-dl dt { font: 0.76rem/1.4 var(--font-mono); color: var(--faint); margin-bottom: 4px; }
+.scenario-dl dd { margin: 0; }
+.scenario .observed dd { color: var(--text); }
+.scenario .observed dd.muted { color: var(--faint); font-style: italic; }
+
+/* roadmap cards: tag on top, consistent */
+.soon { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
+.soon .soon-line { margin-top: 0; }
+
+/* stats strip sits inside the content column */
+.stats-strip { margin-top: 8px; }
+
+/* footer */
+.footer { margin-top: 0; }
+.limits { margin-bottom: 120px; }
+
+/* ---------- mobile ---------- */
+@media (max-width: 600px) {
+  .hero-actions { flex-direction: column; align-items: stretch; }
+  .hero-actions .btn { width: 100%; }
+  .band { margin-top: 88px; padding: 96px 0 80px; }
+  .section { padding-top: 96px; }
+  .limits { margin-bottom: 80px; }
+
+  /* incident table becomes stacked cards */
+  table.incidents thead { display: none; }
+  table.incidents, table.incidents tbody, table.incidents tr, table.incidents td { display: block; width: 100%; }
+  table.incidents tr { padding: 14px 16px; border-bottom: 1px solid var(--line); }
+  table.incidents tr:last-child { border-bottom: 0; }
+  table.incidents td { padding: 4px 0; border: 0; }
+  table.incidents td[data-label]::before { content: attr(data-label); display: block; font: 0.7rem var(--font-mono); color: var(--faint); margin-top: 6px; }
+  table.incidents td:first-child { font-size: 1.02rem; }
+  table.incidents .summary { max-width: none; }
+  .table-wrap:has(table.incidents) { overflow-x: visible; }
+}

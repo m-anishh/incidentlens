@@ -26,7 +26,7 @@ export function StatsStrip() {
   }, []);
 
   return (
-    <section className="stats-strip wrap" aria-label="Facts">
+    <section className="stats-strip" aria-label="Facts">
       <Stat value="2" label="Evidence sources wired" note="metrics (Prometheus) and logs (Loki)" />
       <Stat value="4" label="Failure scenarios with known answers" note="the evaluation set" />
       <Stat value={report.value} label="Time from alert to report" note={report.note} />
