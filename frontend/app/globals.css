@@ -275,3 +275,32 @@ details > summary:hover { color: var(--text); }
 .footer-links a:hover { color: var(--text); }
 .footer-licence { grid-column: 1 / -1; }
 @media (max-width: 640px) { .footer-inner { grid-template-columns: 1fr; } }
+
+/* ---------- dashboard: incident list ---------- */
+.page-head { align-items: flex-end; margin-bottom: 20px; }
+.page-head h1 { font-size: 1.45rem; }
+.counters { display: flex; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+.counter { display: grid; padding: 8px 16px; min-width: 9rem; }
+.counter + .counter { border-left: 1px solid var(--line); }
+.counter-value { font-size: 1.15rem; font-weight: 500; }
+.counter-label { font-size: 0.74rem; color: var(--muted); }
+.counter.tone-warn .counter-value { color: var(--warn); }
+.toolbar { display: flex; gap: 12px; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+.seg button { background: var(--surface); color: var(--muted); border: 0; padding: 7px 14px; font: 500 0.82rem var(--font-sans); cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button.on { background: var(--raised); color: var(--text); }
+.search { background: var(--surface); border: 1px solid var(--line); color: var(--text); border-radius: var(--radius); padding: 7px 12px; font: 0.86rem var(--font-sans); width: min(340px, 100%); }
+.search::placeholder { color: var(--faint); }
+table.incidents td { padding-top: 10px; padding-bottom: 10px; }
+table.incidents .summary { max-width: 440px; color: var(--muted); font-size: 0.84rem; line-height: 1.45; }
+table.incidents .cause { color: var(--text); margin-right: 8px; }
+.cell-stack { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.empty-filter { padding: 24px 0; }
+.waiting { max-width: 640px; }
+.cmd { background: var(--ink); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 12px; font-size: 0.82rem; }
+.cmd code { background: none; border: 0; padding: 0; }
+@media (max-width: 760px) {
+  .counters { width: 100%; }
+  .counter { min-width: 0; flex: 1; padding: 8px 10px; }
+}
