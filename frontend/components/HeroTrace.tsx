@@ -10,19 +10,17 @@ import type { IncidentDetail, IncidentListItem, Run } from "@/lib/types";
 // per-step timings were not recorded yet, so none are shown. That run is not
 // counted as a pass — see the Scenarios section.
 const RECORDED: TraceRow[] = [
-  { step: "window", level: "ok", detail: "alert firing since 12:59:03 UTC · baseline 12:45–12:55 · onset 12:55–12:59" },
-  { step: "prometheus", level: "ok", detail: "16 queries: latency, errors, downstream calls, pool, cache, Postgres, Redis" },
-  { step: "loki", level: "ok", detail: "warning and error lines from the onset, grouped by message" },
-  { step: "collecting", level: "ok", detail: "30 series compared with baseline · 6 moved notably · 2 log patterns" },
-  { step: "baseline", level: "ok", detail: "baseline healthy" },
-  { step: "reasoning", level: "ok", detail: "bedrock/deepseek.v3.2 → cause: inventory-service (high confidence)" },
+  { step: "window", level: "ok", detail: "baseline 12:45–12:55 · onset 12:55–12:59 UTC" },
+  { step: "prometheus", level: "ok", detail: "16 queries · latency, errors, calls, pool, cache, DB" },
+  { step: "loki", level: "ok", detail: "warnings and errors, grouped by message" },
+  { step: "collecting", level: "ok", detail: "30 series vs baseline · 6 moved · 2 log patterns" },
+  { step: "reasoning", level: "ok", detail: "deepseek.v3.2 → inventory-service · high confidence" },
 ];
 
 const FINDINGS = [
-  ["inventory-service POST /reserve p95", "5ms → 912ms"],
-  ["orders-api → inventory-service call p95", "5ms → 859ms"],
-  ["orders-api “inventory-service slow” warnings in the onset", "405"],
-  ["Postgres mean query time, pool acquire p95", "unchanged"],
+  ["inventory-service /reserve p95", "5ms → 912ms"],
+  ["orders-api → inventory call p95", "5ms → 859ms"],
+  ["Postgres query time, pool wait", "unchanged"],
 ];
 
 export function HeroTrace() {
@@ -46,7 +44,7 @@ export function HeroTrace() {
   if (live) {
     const { incident, run } = live;
     return (
-      <div className="hero-trace">
+      <div className="hero-trace compact">
         <TracePanel
           title={`Incident #${incident.id} · ${incident.alertname}`}
           meta={<span className="mono">{incident.service} {incident.labels.method} {incident.labels.route}</span>}
@@ -66,7 +64,7 @@ export function HeroTrace() {
   }
 
   return (
-    <div className="hero-trace">
+    <div className="hero-trace compact">
       <TracePanel
         title="Incident #1 · HighLatencyP95"
         meta={<span className="mono">orders-api POST /orders</span>}
@@ -81,8 +79,7 @@ export function HeroTrace() {
               </tbody>
             </table>
             <p className="trace-conclusion">
-              Probable cause: <span className="mono">inventory-service</span>. orders-api is slow because the service it
-              calls is slow; its own pool, cache and database are flat.
+              Probable cause: <span className="mono">inventory-service</span> — orders-api is only the symptom.
             </p>
           </>
         }

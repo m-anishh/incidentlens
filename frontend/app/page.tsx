@@ -25,6 +25,7 @@ export default function Landing() {
   return (
     <main className="landing">
       {/* 1 — hero */}
+      <div className="hero-band">
       <section className="hero wrap">
         <div className="hero-copy">
           <span className="pill"><span className="dot" /> Open source</span>
@@ -42,6 +43,7 @@ export default function Landing() {
         </div>
         <HeroTrace />
       </section>
+      </div>
 
       {/* 2 — stats */}
       <StatsStrip />
