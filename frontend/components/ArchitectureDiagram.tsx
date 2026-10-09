@@ -1,75 +1,157 @@
-// Inline SVG: the alert path along the top, the log path and Grafana below.
-// Solid arrows push data; dashed arrows are the agent's queries.
+"use client";
 
-const W = 126, H = 56;
-const top = 52, bottom = 210;
-const xs = [16, 198, 380, 562, 744, 926];
+// Isometric 3D architecture: CSS 3D boxes on a tilted floor, data paths drawn
+// as wiring on the floor and animated in the direction data flows. Click a
+// block to see what it does and what the agent asks of it.
 
-function Node({ x, y, title, sub, brand }: { x: number; y: number; title: string; sub: string; brand?: boolean }) {
-  return (
-    <g>
-      <rect x={x} y={y} width={W} height={H} rx={8}
-        fill={brand ? "rgba(46,127,224,0.12)" : "var(--raised)"}
-        stroke={brand ? "var(--brand)" : "var(--line)"} strokeWidth={brand ? 1.5 : 1} />
-      <text x={x + W / 2} y={y + 24} textAnchor="middle" className="arch-title">{title}</text>
-      <text x={x + W / 2} y={y + 42} textAnchor="middle" className="arch-sub">{sub}</text>
-    </g>
-  );
-}
+import { useState } from "react";
+
+type Id = "target" | "prom" | "am" | "grafana" | "loki" | "lens" | "ui" | "pg";
+type Node = { id: Id; x: number; y: number; title: string; sub: string; brand?: boolean; tall?: boolean };
+
+const W = 180, H = 100;
+const NODES: Node[] = [
+  { id: "target", x: 40, y: 40, title: "Target system", sub: "orders · inventory" },
+  { id: "prom", x: 320, y: 40, title: "Prometheus", sub: "metrics" },
+  { id: "am", x: 600, y: 40, title: "Alertmanager", sub: "2 alert rules" },
+  { id: "grafana", x: 40, y: 280, title: "Grafana", sub: "for humans" },
+  { id: "loki", x: 320, y: 280, title: "Loki", sub: "logs" },
+  { id: "lens", x: 600, y: 280, title: "IncidentLens", sub: "agent + LLM", brand: true, tall: true },
+  { id: "ui", x: 320, y: 520, title: "UI", sub: "this site" },
+  { id: "pg", x: 600, y: 520, title: "Postgres", sub: "runs · reports" },
+];
+
+type Edge = { from: Id; to: Id; d: string; kind: "push" | "query" | "read"; label?: [number, number, string] };
+const EDGES: Edge[] = [
+  { from: "target", to: "prom", d: "M220 90 L320 90", kind: "push", label: [270, 80, "scrape"] },
+  { from: "prom", to: "am", d: "M500 90 L600 90", kind: "push", label: [550, 80, "rules"] },
+  { from: "am", to: "lens", d: "M690 140 L690 280", kind: "push", label: [702, 215, "webhook"] },
+  { from: "lens", to: "pg", d: "M690 380 L690 520", kind: "push", label: [702, 455, "report"] },
+  { from: "pg", to: "ui", d: "M600 570 L500 570", kind: "push", label: [550, 560, "poll"] },
+  { from: "target", to: "loki", d: "M130 140 L130 230 L410 230 L410 280", kind: "push", label: [146, 222, "Alloy tails logs"] },
+  { from: "lens", to: "loki", d: "M600 330 L500 330", kind: "query", label: [550, 320, "LogQL"] },
+  { from: "lens", to: "prom", d: "M640 280 L640 190 L450 190 L450 140", kind: "query", label: [545, 182, "PromQL"] },
+  { from: "grafana", to: "loki", d: "M220 330 L320 330", kind: "read" },
+];
+
+const INFO: Record<Id, { role: string; body: string; detail?: string }> = {
+  target: {
+    role: "The subject under observation",
+    body: "orders-api and inventory-service, with Postgres and Redis behind them. Built to fail in four known ways. The agent never imports or reads its code.",
+    detail: "GET /orders/{order_id} · GET /orders · POST /orders",
+  },
+  prom: {
+    role: "Metrics store and alert rules",
+    body: "Scrapes every service and both database exporters every 5 seconds. Fires when p95 latency passes 500ms or 5xx passes 5% on any route for two minutes.",
+    detail: "histogram_quantile(0.95, sum by (service, route, le) (rate(http_request_duration_seconds_bucket[1m])))",
+  },
+  am: {
+    role: "The only trigger",
+    body: "Groups firing alerts and posts them to IncidentLens as a webhook, plus a resolved notification when the alert clears. No human starts an investigation.",
+    detail: "POST /webhook/alertmanager",
+  },
+  grafana: {
+    role: "Dashboards, for people",
+    body: "Reads the same Prometheus and Loki data for a human looking along. The agent does not use it — its evidence comes straight from the sources.",
+  },
+  loki: {
+    role: "Log store",
+    body: "Alloy tails the target's containers and pushes their logs here. The agent counts warnings and errors by message, for the baseline and for the incident.",
+    detail: 'sum by (service, msg) (count_over_time({level=~"warning|error"} | json [10m]))',
+  },
+  lens: {
+    role: "The agent",
+    body: "Deduplicates the alert by fingerprint, opens a window that starts before the alert, compares the incident with a healthy baseline, asks an LLM for a hypothesis, and records every step. It suggests fixes and never executes them.",
+    detail: "window = [startsAt − for − baseline − margin, startsAt + margin]",
+  },
+  ui: {
+    role: "This site",
+    body: "Reads incidents, runs and traces from the agent. Read-only by design — it has no way to start an investigation or a replay.",
+  },
+  pg: {
+    role: "The agent's own database",
+    body: "Incidents, investigation runs, raw webhook payloads and per-alert notifications. A separate instance from the target's Postgres, so the investigator never shares a failure with what it observes.",
+    detail: "incidents · runs · webhook_payloads · alert_notifications",
+  },
+};
+
+const TITLE = Object.fromEntries(NODES.map((n) => [n.id, n.title])) as Record<Id, string>;
 
 export function ArchitectureDiagram() {
-  const mid = top + H / 2;
+  const [sel, setSel] = useState<Id>("lens");
+  const linked = (e: Edge) => e.from === sel || e.to === sel;
+  const neighbours = EDGES.filter(linked).map((e) => (e.from === sel ? e.to : e.from));
+  const info = INFO[sel];
+
   return (
-    <div className="arch-wrap">
-      <svg viewBox="0 0 1070 300" className="arch" role="img"
-        aria-label="Target system is scraped by Prometheus, which alerts through Alertmanager to IncidentLens. IncidentLens queries Prometheus and Loki, stores reports in Postgres, and the UI reads them. Alloy ships logs to Loki; Grafana reads Prometheus and Loki.">
-        <defs>
-          <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-            <path d="M0 0 10 5 0 10z" fill="var(--muted)" />
-          </marker>
-          <marker id="arr-b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-            <path d="M0 0 10 5 0 10z" fill="var(--brand)" />
-          </marker>
-        </defs>
+    <div className="iso-wrap">
+      <div className="iso-stage">
+        <div className="iso-plane">
+          <svg className="iso-wires" viewBox="0 0 820 640" aria-hidden>
+            <defs>
+              <marker id="iso-arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                <path d="M0 0 10 5 0 10z" fill="#7d8ea5" />
+              </marker>
+              <marker id="iso-arr-b" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                <path d="M0 0 10 5 0 10z" fill="#1f6feb" />
+              </marker>
+            </defs>
+            {EDGES.map((e, i) => (
+              <g key={i} className={linked(e) ? "edge on" : "edge off"}>
+                <path d={e.d} className={`wire wire-${e.kind}`} />
+                {e.kind !== "read" && (
+                  <path d={e.d} className={`pulse pulse-${e.kind}`} markerEnd={e.kind === "query" ? "url(#iso-arr-b)" : "url(#iso-arr)"} />
+                )}
+                {e.label && (
+                  <text x={e.label[0]} y={e.label[1]} className={`wire-label ${e.kind === "query" ? "brand" : ""}`}
+                    textAnchor={e.label[2].length > 10 ? "start" : "middle"}>{e.label[2]}</text>
+                )}
+              </g>
+            ))}
+          </svg>
 
-        {/* alert path */}
-        {[0, 1, 2, 3, 4].map((i) => (
-          <line key={i} x1={xs[i] + W} y1={mid} x2={xs[i + 1] - 4} y2={mid} stroke="var(--muted)" strokeWidth={1.3} markerEnd="url(#arr)" />
-        ))}
-        <text x={(xs[0] + W + xs[1]) / 2} y={mid - 8} textAnchor="middle" className="arch-edge">scrape</text>
-        <text x={(xs[1] + W + xs[2]) / 2} y={mid - 8} textAnchor="middle" className="arch-edge">rules</text>
-        <text x={(xs[2] + W + xs[3]) / 2} y={mid - 8} textAnchor="middle" className="arch-edge">webhook</text>
-        <text x={(xs[3] + W + xs[4]) / 2} y={mid - 8} textAnchor="middle" className="arch-edge">report</text>
-        <text x={(xs[4] + W + xs[5]) / 2} y={mid - 8} textAnchor="middle" className="arch-edge">poll</text>
+          {NODES.map((n) => {
+            const state = n.id === sel ? "selected" : neighbours.includes(n.id) ? "linked" : "dim";
+            return (
+              <button key={n.id} type="button" onClick={() => setSel(n.id)} aria-pressed={n.id === sel}
+                aria-label={`${n.title}: ${INFO[n.id].role}`}
+                className={`block ${n.brand ? "block-brand" : ""} ${n.tall ? "block-tall" : ""} is-${state}`}
+                style={{ left: n.x, top: n.y, width: W, height: H }}>
+                <span className="face side-s" />
+                <span className="face side-e" />
+                <span className="face side-n" />
+                <span className="face side-w" />
+                <span className="face top">
+                  <span className="block-title">{n.title}</span>
+                  <span className="block-sub">{n.sub}</span>
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
-        {/* agent queries Prometheus (arc above) */}
-        <path d={`M ${xs[3] + W / 2} ${top} C ${xs[3] + W / 2} ${top - 44}, ${xs[1] + W / 2} ${top - 44}, ${xs[1] + W / 2} ${top - 4}`}
-          fill="none" stroke="var(--brand)" strokeWidth={1.3} strokeDasharray="5 4" markerEnd="url(#arr-b)" />
-        <text x={(xs[1] + xs[3]) / 2 + W / 2} y={top - 40} textAnchor="middle" className="arch-edge brand">PromQL</text>
+      <aside className="iso-panel" aria-live="polite">
+        <span className="iso-panel-role">{info.role}</span>
+        <h3>{TITLE[sel]}</h3>
+        <p>{info.body}</p>
+        {info.detail && <code className="iso-panel-code">{info.detail}</code>}
+        {neighbours.length > 0 && (
+          <div className="iso-panel-links">
+            <span>Connected to</span>
+            {neighbours.map((id) => (
+              <button key={id} type="button" className="chip" onClick={() => setSel(id)}>{TITLE[id]}</button>
+            ))}
+          </div>
+        )}
+        <span className="iso-hint">Click any block</span>
+      </aside>
 
-        {/* log path: Alloy tails the target's containers into Loki */}
-        <path d={`M ${xs[0] + W / 2} ${top + H} L ${xs[0] + W / 2} ${bottom - 26} L ${xs[2] + W / 2} ${bottom - 26} L ${xs[2] + W / 2} ${bottom - 4}`}
-          fill="none" stroke="var(--muted)" strokeWidth={1.3} markerEnd="url(#arr)" />
-        <text x={xs[0] + W / 2 + 10} y={bottom - 34} className="arch-edge">Alloy tails container logs</text>
-
-        {/* agent queries Loki */}
-        <path d={`M ${xs[3] + W / 2} ${top + H} L ${xs[3] + W / 2} ${bottom + H / 2} L ${xs[2] + W + 4} ${bottom + H / 2}`}
-          fill="none" stroke="var(--brand)" strokeWidth={1.3} strokeDasharray="5 4" markerEnd="url(#arr-b)" />
-        <text x={xs[3] + W / 2 + 8} y={bottom + H / 2 - 8} className="arch-edge brand">LogQL</text>
-
-        {/* Grafana reads Prometheus and Loki — for humans, not the agent */}
-        <line x1={xs[1] + W / 2} y1={bottom} x2={xs[1] + W / 2} y2={top + H + 4} stroke="var(--faint)" strokeWidth={1.2} strokeDasharray="2 4" />
-        <line x1={xs[1] + W} y1={bottom + H / 2} x2={xs[2]} y2={bottom + H / 2} stroke="var(--faint)" strokeWidth={1.2} strokeDasharray="2 4" />
-
-        <Node x={xs[0]} y={top} title="Target system" sub="orders · inventory" />
-        <Node x={xs[1]} y={top} title="Prometheus" sub="metrics" />
-        <Node x={xs[2]} y={top} title="Alertmanager" sub="2 rules" />
-        <Node x={xs[3]} y={top} title="IncidentLens" sub="agent + LLM" brand />
-        <Node x={xs[4]} y={top} title="Postgres" sub="runs · reports" />
-        <Node x={xs[5]} y={top} title="UI" sub="this site" />
-        <Node x={xs[2]} y={bottom} title="Loki" sub="logs" />
-        <Node x={xs[1]} y={bottom} title="Grafana" sub="for humans" />
-      </svg>
+      <ul className="iso-legend" aria-hidden>
+        <li><i className="lg-push" /> data pushed</li>
+        <li><i className="lg-query" /> the agent&apos;s queries</li>
+        <li><i className="lg-read" /> read by humans</li>
+      </ul>
     </div>
   );
 }
