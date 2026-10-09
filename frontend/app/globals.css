@@ -347,3 +347,23 @@ table.data.compact td, table.data.compact th { padding: 6px 12px; }
 .logpattern + .logpattern { margin-top: 8px; }
 .logline { margin-top: 6px; font-size: 0.74rem; color: var(--muted); background: var(--ink); border: 1px solid var(--line-soft); border-radius: 4px; padding: 6px 8px; }
 table.data tr.selected td { background: var(--brand-wash); }
+
+/* ---------- coming soon: real UI, dimmed, obviously not working ---------- */
+.soon { border: 1px dashed var(--line); border-radius: var(--radius-lg); padding: 14px 16px; background: transparent; opacity: 0.62; cursor: not-allowed; user-select: none; }
+.soon-title { font-weight: 500; font-size: 0.92rem; }
+.soon-line { color: var(--muted); font-size: 0.84rem; margin-top: 6px; }
+.soon-compact { padding: 10px 14px; }
+.soon-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 24px; }
+@media (max-width: 900px) { .soon-grid { grid-template-columns: 1fr; } }
+.soon-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@media (max-width: 700px) { .soon-row { grid-template-columns: 1fr; } }
+.principle { border: 1px solid var(--line); border-left: 3px solid var(--neutral); border-radius: var(--radius); background: var(--surface); padding: 12px 14px; }
+.principle-label { font-size: 0.74rem; color: var(--muted); font-weight: 600; }
+.principle p { margin-top: 4px; }
+
+/* evidence and settings pages */
+.sources { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.source h2 { font-size: 1rem; }
+@media (max-width: 800px) { .sources { grid-template-columns: 1fr; } }
+.settings { display: grid; gap: 28px; max-width: 720px; }
+.settings-h { font-size: 0.95rem; color: var(--muted); font-weight: 500; }

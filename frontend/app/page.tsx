@@ -2,7 +2,9 @@ import Link from "next/link";
 import { ArchitectureDiagram } from "@/components/ArchitectureDiagram";
 import { HeroTrace } from "@/components/HeroTrace";
 import { RotatingWord } from "@/components/RotatingWord";
+import { ComingSoon } from "@/components/ComingSoon";
 import { StatsStrip } from "@/components/StatsStrip";
+import { COMING_SOON } from "@/lib/roadmap";
 import { RESULT_LABEL, SCENARIOS } from "@/lib/scenarios";
 import { DOCS_URL, REPO_URL } from "@/lib/site";
 
@@ -112,6 +114,16 @@ export default function Landing() {
           that starts before the alert so the onset is in view. One Compose file runs it locally and on a single EC2 instance.
         </p>
         <ArchitectureDiagram />
+      </section>
+
+      {/* roadmap — visible, dimmed, not working */}
+      <section id="roadmap" className="section wrap" aria-labelledby="road">
+        <p className="eyebrow">Not built yet</p>
+        <h2 id="road" className="section-title">What comes next</h2>
+        <p className="muted section-lead">Shown so the gaps are visible. None of these work today.</p>
+        <div className="soon-grid">
+          {Object.values(COMING_SOON).map((c) => <ComingSoon key={c.title} title={c.title} line={c.line} />)}
+        </div>
       </section>
 
       {/* 7 — limits */}

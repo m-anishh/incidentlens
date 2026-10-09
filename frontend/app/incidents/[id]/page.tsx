@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useMemo, useState } from "react";
+import { ComingSoon } from "@/components/ComingSoon";
 import { Sparkline } from "@/components/Sparkline";
+import { COMING_SOON } from "@/lib/roadmap";
 import { AlertBadge, RunBadge, WeakBaselineBadge } from "@/components/StatusBadge";
 import { TracePanel, type TraceRow } from "@/components/TracePanel";
 import { between, clock, duration, labels, time, value } from "@/lib/format";
@@ -51,6 +53,11 @@ export default function IncidentPage() {
       )}
 
       <RunHistory runs={data.runs} current={run?.id} onSelect={setSelected} />
+
+      <section className="block soon-row" aria-label="Not built yet">
+        <ComingSoon compact {...COMING_SOON.memory} />
+        <ComingSoon compact {...COMING_SOON.topology} />
+      </section>
     </main>
   );
 }
