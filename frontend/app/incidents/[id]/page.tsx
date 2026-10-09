@@ -359,7 +359,7 @@ function RunHistory({ runs, current, onSelect }: { runs: Run[]; current?: number
                 <td><RunBadge status={r.status} /></td>
                 <td className="mono small">{time(r.created_at)}</td>
                 <td className="num mono">{r.finished_at ? duration(between(r.created_at, r.finished_at)) : "—"}</td>
-                <td className="mono small">{r.cause_service ?? (r.status === "failed" ? <span className="error">failed at {r.error?.step}</span> : "—")}</td>
+                <td className="mono small">{r.cause_service ?? r.report?.cause_service ?? (r.status === "failed" ? <span className="error">failed at {r.error?.step}</span> : "—")}</td>
               </tr>
             ))}
           </tbody>

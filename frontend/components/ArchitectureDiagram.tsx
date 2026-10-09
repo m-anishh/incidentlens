@@ -151,15 +151,15 @@ export function ArchitectureDiagram() {
             return (
               <button key={n.id} type="button" onClick={() => select(n.id)} aria-pressed={n.id === sel}
                 aria-label={`${n.title}: ${INFO[n.id].role}`}
-                className={`block ${n.brand ? "block-brand" : ""} ${n.tall ? "block-tall" : ""} is-${state}`}
+                className={`iso-block ${n.brand ? "iso-block-brand" : ""} ${n.tall ? "iso-block-tall" : ""} is-${state}`}
                 style={{ left: n.x, top: n.y, width: W, height: H }}>
                 <span className="face side-s" />
                 <span className="face side-e" />
                 <span className="face side-n" />
                 <span className="face side-w" />
                 <span className="face top">
-                  <span className="block-title">{n.title}</span>
-                  <span className="block-sub">{n.sub}</span>
+                  <span className="iso-block-title">{n.title}</span>
+                  <span className="iso-block-sub">{n.sub}</span>
                 </span>
               </button>
             );
