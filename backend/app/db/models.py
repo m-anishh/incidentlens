@@ -59,6 +59,8 @@ class Run(Base):
     missing_sources: Mapped[list] = mapped_column(JSONB, default=list)
     weak_baseline: Mapped[bool] = mapped_column(Boolean, default=False)
     error: Mapped[dict | None] = mapped_column(JSONB)  # {"step": ..., "message": ...}
+    trace: Mapped[list] = mapped_column(JSONB, default=list)  # ordered step events, for the UI
+    model: Mapped[str | None] = mapped_column(String(200))   # "provider/model" that reasoned
 
 
 class WebhookPayload(Base):

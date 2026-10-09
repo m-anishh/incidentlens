@@ -3,6 +3,7 @@ name: incidentlens
 services:
   # ---------------------------------------------------------------- target system
   orders-api:
+    restart: unless-stopped
     build: ./target-system/orders-api
     environment:
       SERVICE_NAME: orders-api
@@ -25,6 +26,7 @@ services:
       retries: 10
 
   inventory-service:
+    restart: unless-stopped
     build: ./target-system/inventory-service
     environment:
       SERVICE_NAME: inventory-service
@@ -32,6 +34,7 @@ services:
     healthcheck: *py_health
 
   target-postgres:
+    restart: unless-stopped
     image: postgres:16-alpine
     command: ["postgres", "-c", "shared_preload_libraries=pg_stat_statements", "-c", "pg_stat_statements.track=all"]
     environment:
@@ -47,6 +50,7 @@ services:
       retries: 10
 
   redis:
+    restart: unless-stopped
     image: redis:7.4-alpine
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
@@ -55,6 +59,7 @@ services:
       retries: 10
 
   postgres-exporter:
+    restart: unless-stopped
     image: prometheuscommunity/postgres-exporter:v0.16.0
     command: ["--collector.stat_statements"]
     environment:
@@ -63,6 +68,7 @@ services:
       target-postgres: { condition: service_healthy }
 
   redis-exporter:
+    restart: unless-stopped
     image: oliver006/redis_exporter:v1.67.0
     environment:
       REDIS_ADDR: redis://redis:6379
@@ -94,6 +100,7 @@ services:
 
   # ------------------------------------------------------------------- monitoring
   prometheus:
+    restart: unless-stopped
     image: prom/prometheus:v3.1.0
     command:
       - --config.file=/etc/prometheus/prometheus.yml
@@ -104,6 +111,7 @@ services:
     ports: ["9090:9090"]
 
   alertmanager:
+    restart: unless-stopped
     image: prom/alertmanager:v0.28.0
     command: ["--config.file=/etc/alertmanager/alertmanager.yml"]
     volumes:
@@ -111,6 +119,7 @@ services:
     ports: ["9093:9093"]
 
   loki:
+    restart: unless-stopped
     image: grafana/loki:3.3.2
     command: ["-config.file=/etc/loki/loki.yml"]
     volumes:
@@ -119,6 +128,7 @@ services:
     ports: ["3100:3100"]
 
   alloy:
+    restart: unless-stopped
     image: grafana/alloy:v1.6.1
     command: ["run", "--server.http.listen-addr=0.0.0.0:12345", "/etc/alloy/config.alloy"]
     volumes:
@@ -128,6 +138,7 @@ services:
     depends_on: [loki]
 
   grafana:
+    restart: unless-stopped
     image: grafana/grafana:11.4.0
     environment:
       GF_AUTH_ANONYMOUS_ENABLED: "true"
@@ -140,6 +151,7 @@ services:
 
   # ------------------------------------------------------------------------ agent
   incidentlens-db:
+    restart: unless-stopped
     image: postgres:16-alpine
     environment:
       POSTGRES_USER: ${AGENT_DB_USER}
@@ -154,6 +166,7 @@ services:
       retries: 10
 
   incidentlens:
+    restart: unless-stopped
     build: ./backend
     environment:
       DATABASE_URL: postgresql+asyncpg://${AGENT_DB_USER}:${AGENT_DB_PASSWORD}@incidentlens-db:5432/${AGENT_DB_NAME}
@@ -171,13 +184,25 @@ services:
     ports: ["8080:8000"]
     depends_on:
       incidentlens-db: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/healthz')"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
 
   incidentlens-ui:
+    restart: unless-stopped
     build: ./frontend
     environment:
       BACKEND_URL: http://incidentlens:8000
     ports: ["3000:3000"]
-    depends_on: [incidentlens]
+    depends_on:
+      incidentlens: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost:3000/"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
 
 volumes:
   prometheus-data:

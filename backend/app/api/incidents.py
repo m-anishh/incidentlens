@@ -1,6 +1,8 @@
 """Read endpoints for the frontend, plus replay (a dev tool, not in the UI)."""
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException
+from typing import Literal
+
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Query
 
 from app.db import repo
 from app.db.models import Incident, Run
@@ -19,23 +21,36 @@ def _incident(i: Incident) -> dict:
 
 
 def _run(r: Run, full: bool = True) -> dict:
+    report = r.report or {}
     out = {
         "id": r.id, "incident_id": r.incident_id, "trigger": r.trigger, "status": r.status,
         "current_step": r.current_step, "created_at": r.created_at, "started_at": r.started_at,
         "finished_at": r.finished_at, "missing_sources": r.missing_sources,
-        "weak_baseline": r.weak_baseline, "error": r.error,
-        "summary": (r.report or {}).get("summary"),
+        "weak_baseline": r.weak_baseline, "error": r.error, "model": r.model,
+        "summary": report.get("summary"), "cause_service": report.get("cause_service"),
+        "confidence": report.get("confidence"),
     }
     if full:
         out |= {"window_start": r.window_start, "window_end": r.window_end,
-                "evidence": r.evidence, "report": r.report}
+                "evidence": r.evidence, "report": r.report, "trace": r.trace or []}
     return out
 
 
 @router.get("/incidents")
-async def list_incidents():
-    rows = await repo.list_incidents()
-    return [_incident(i) | {"latest_run": _run(r, full=False) if r else None} for i, r in rows]
+async def list_incidents(
+    state: Literal["open", "resolved"] | None = Query(None, description="Filter by alert state"),
+    limit: int = Query(100, ge=1, le=500),
+):
+    rows = await repo.list_incidents(state, limit)
+    return [
+        _incident(i) | {"run_count": n or 0, "latest_run": _run(r, full=False) if r else None}
+        for i, r, n in rows
+    ]
+
+
+@router.get("/incidents/stats")
+async def incident_stats():
+    return await repo.incident_stats()
 
 
 @router.get("/incidents/{incident_id}")

@@ -133,11 +133,12 @@ async def update_run(run_id: int, **fields):
         await session.execute(update(Run).where(Run.id == run_id).values(**fields))
 
 
-async def fail_run(run_id: int, step: str | None, message: str):
-    await update_run(
-        run_id, status="failed", finished_at=utcnow(),
-        error={"step": step, "message": message},
-    )
+async def fail_run(run_id: int, step: str | None, message: str, trace: list | None = None):
+    fields = {"status": "failed", "finished_at": utcnow(), "current_step": None,
+              "error": {"step": step, "message": message}}
+    if trace is not None:
+        fields["trace"] = trace
+    await update_run(run_id, **fields)
 
 
 async def sweep_stranded_runs(timeout_s: int) -> int:
@@ -158,21 +159,48 @@ async def sweep_stranded_runs(timeout_s: int) -> int:
 
 # --- Reads for the API ------------------------------------------------------------
 
-async def list_incidents(limit: int = 100):
+async def list_incidents(state: str | None = None, limit: int = 100):
+    """Incidents newest first, each with its latest run and run count.
+    state: None (all) | "open" | "resolved"."""
     async with SessionLocal() as session:
         latest_run = (
-            select(Run.incident_id, func.max(Run.id).label("run_id"))
+            select(Run.incident_id, func.max(Run.id).label("run_id"), func.count(Run.id).label("run_count"))
             .group_by(Run.incident_id)
             .subquery()
         )
-        rows = await session.execute(
-            select(Incident, Run)
+        query = (
+            select(Incident, Run, latest_run.c.run_count)
             .outerjoin(latest_run, latest_run.c.incident_id == Incident.id)
             .outerjoin(Run, Run.id == latest_run.c.run_id)
             .order_by(Incident.id.desc())
             .limit(limit)
         )
-        return rows.all()
+        if state == "open":
+            query = query.where(Incident.resolved_at.is_(None))
+        elif state == "resolved":
+            query = query.where(Incident.resolved_at.is_not(None))
+        return (await session.execute(query)).all()
+
+
+async def incident_stats():
+    """Counts for the list header."""
+    since = utcnow() - timedelta(hours=24)
+    async with SessionLocal() as session:
+        total = await session.scalar(select(func.count()).select_from(Incident))
+        open_ = await session.scalar(select(func.count()).select_from(Incident).where(Incident.resolved_at.is_(None)))
+        last_24h = await session.scalar(select(func.count()).select_from(Incident).where(Incident.created_at >= since))
+        investigating = await session.scalar(
+            select(func.count()).select_from(Run).where(Run.status.not_in(TERMINAL_STATUSES)))
+        runs_24h = dict((await session.execute(
+            select(Run.status, func.count()).where(Run.created_at >= since).group_by(Run.status))).all())
+        mttr = await session.scalar(
+            select(func.avg(func.extract("epoch", Incident.resolved_at - Incident.starts_at)))
+            .where(Incident.resolved_at.is_not(None), Incident.created_at >= since))
+        return {
+            "total": total, "open": open_, "last_24h": last_24h, "investigating": investigating,
+            "runs_24h": runs_24h,
+            "mean_time_to_resolve_s": round(float(mttr)) if mttr is not None else None,
+        }
 
 
 async def get_incident(incident_id: int):
