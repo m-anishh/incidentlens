@@ -149,3 +149,30 @@ details > summary { cursor: pointer; color: var(--muted); font-size: 0.82rem; }
 details > summary:hover { color: var(--text); }
 .sparkline path { stroke: var(--brand); }
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ---------- nav ---------- */
+.nav { position: sticky; top: 0; z-index: 50; border-bottom: 1px solid transparent; transition: background 0.2s, border-color 0.2s; }
+.nav-scrolled { background: rgba(12, 20, 30, 0.78); backdrop-filter: saturate(140%) blur(10px); -webkit-backdrop-filter: saturate(140%) blur(10px); border-bottom-color: var(--line); }
+.nav-inner { max-width: var(--max); margin: 0 auto; padding: 0 var(--gutter); height: 60px; display: flex; align-items: center; gap: 24px; }
+.wordmark { display: inline-flex; align-items: center; gap: 8px; color: var(--text); font-weight: 600; font-size: 1rem; letter-spacing: -0.01em; }
+.wordmark:hover { text-decoration: none; }
+.wordmark-section { color: var(--muted); font-weight: 400; font-size: 0.85rem; padding-left: 8px; border-left: 1px solid var(--line); }
+.nav-links { display: flex; gap: 4px; flex: 1; justify-content: center; }
+.nav-link { color: var(--muted); font-size: 0.875rem; padding: 6px 12px; border-radius: var(--radius); }
+.nav-link:hover { color: var(--text); text-decoration: none; background: var(--surface); }
+.nav-link.active { color: var(--text); background: var(--raised); }
+.nav-actions { display: flex; align-items: center; gap: 10px; }
+.nav-icon { color: var(--muted); display: inline-flex; padding: 6px; border-radius: var(--radius); }
+.nav-icon:hover { color: var(--text); background: var(--surface); }
+.nav-toggle { display: none; background: none; border: 1px solid var(--line); border-radius: var(--radius); padding: 8px; cursor: pointer; flex-direction: column; gap: 3px; }
+.nav-toggle span { display: block; width: 16px; height: 2px; background: var(--text); }
+.nav-sheet { border-top: 1px solid var(--line); background: var(--ink); padding: 8px var(--gutter) 16px; display: flex; flex-direction: column; }
+.sheet-link { color: var(--text); padding: 12px 4px; border-bottom: 1px solid var(--line-soft); }
+.sheet-link.active { color: var(--brand); }
+.sheet-actions { display: flex; gap: 10px; padding-top: 14px; flex-wrap: wrap; }
+@media (max-width: 760px) {
+  .nav-links, .nav-cta, .nav-icon { display: none; }
+  .nav-toggle { display: inline-flex; }
+  .nav-inner { justify-content: space-between; }
+  .nav { background: rgba(12, 20, 30, 0.92); border-bottom-color: var(--line); }
+}

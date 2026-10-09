@@ -3,6 +3,9 @@ WORKDIR /app
 COPY package.json package-lock.json* ./
 RUN npm install
 COPY . .
+# Inlined into the client bundle at build time.
+ARG NEXT_PUBLIC_REPO_URL=""
+ENV NEXT_PUBLIC_REPO_URL=$NEXT_PUBLIC_REPO_URL
 RUN npm run build
 
 FROM node:22-alpine
