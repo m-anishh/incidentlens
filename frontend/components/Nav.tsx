@@ -40,7 +40,7 @@ export function Nav() {
     <header className={`nav ${scrolled ? "nav-scrolled" : ""}`}>
       <div className="nav-inner">
         <Link href="/" className="wordmark" aria-label="IncidentLens home">
-          <Mark /> IncidentLens
+          <Mark /> <span>Incident<span className="accent">Lens</span></span>
           {inApp && <span className="wordmark-section">dashboard</span>}
         </Link>
 
@@ -57,8 +57,8 @@ export function Nav() {
             </a>
           )}
           {inApp
-            ? <Link href="/" className="btn btn-ghost nav-cta">Project site</Link>
-            : <Link href="/incidents" className="btn btn-primary nav-cta">Dashboard</Link>}
+            ? <Link href="/" className="btn btn-sm nav-cta">Project site</Link>
+            : <Link href="/incidents" className="btn btn-soft btn-sm nav-cta">Open dashboard</Link>}
           <button className="nav-toggle" aria-label={open ? "Close menu" : "Open menu"} aria-expanded={open}
             onClick={() => setOpen(!open)}>
             <span /><span /><span />
@@ -75,7 +75,7 @@ export function Nav() {
             {inApp
               ? <Link href="/" className="btn">Project site</Link>
               : <Link href="/incidents" className="btn btn-primary">Dashboard</Link>}
-            {REPO_URL && <a href={REPO_URL} className="btn btn-ghost" target="_blank" rel="noreferrer"><GitHub /> GitHub</a>}
+            {REPO_URL && <a href={REPO_URL} className="btn" target="_blank" rel="noreferrer"><GitHub /> GitHub</a>}
           </div>
         </div>
       )}
@@ -85,7 +85,7 @@ export function Nav() {
 
 function Mark() {
   return (
-    <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden>
+    <svg width="28" height="28" viewBox="0 0 20 20" aria-hidden>
       <circle cx="9" cy="9" r="6.5" fill="none" stroke="var(--brand)" strokeWidth="2" />
       <circle cx="9" cy="9" r="2" fill="var(--brand)" />
       <path d="M13.8 13.8 18 18" stroke="var(--brand)" strokeWidth="2" strokeLinecap="round" />

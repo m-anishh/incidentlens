@@ -29,7 +29,7 @@ export default function Landing() {
         <div className="hero-copy">
           <span className="pill"><span className="dot" /> Open source</span>
           <h1 className="hero-title">
-            Your incidents deserve a better <RotatingWord words={["investigator", "first responder", "witness"]} />
+            Your incidents deserve a better <RotatingWord words={["investigator.", "first responder.", "witness."]} />
           </h1>
           <p className="hero-sub">
             An AI agent that investigates production incidents, gathers evidence from metrics and logs, and explains what
@@ -37,7 +37,7 @@ export default function Landing() {
           </p>
           <div className="row hero-actions">
             <Link href="/incidents" className="btn btn-primary">Open dashboard</Link>
-            <Link href="/#how-it-works" className="btn">How it works</Link>
+            <Link href="/#how-it-works" className="btn">See how it works</Link>
           </div>
         </div>
         <HeroTrace />

@@ -1,9 +1,9 @@
 // Inline SVG: the alert path along the top, the log path and Grafana below.
 // Solid arrows push data; dashed arrows are the agent's queries.
 
-const W = 132, H = 56;
+const W = 126, H = 56;
 const top = 52, bottom = 210;
-const xs = [16, 182, 348, 514, 680, 846];
+const xs = [16, 198, 380, 562, 744, 926];
 
 function Node({ x, y, title, sub, brand }: { x: number; y: number; title: string; sub: string; brand?: boolean }) {
   return (
@@ -21,7 +21,7 @@ export function ArchitectureDiagram() {
   const mid = top + H / 2;
   return (
     <div className="arch-wrap">
-      <svg viewBox="0 0 994 300" className="arch" role="img"
+      <svg viewBox="0 0 1070 300" className="arch" role="img"
         aria-label="Target system is scraped by Prometheus, which alerts through Alertmanager to IncidentLens. IncidentLens queries Prometheus and Loki, stores reports in Postgres, and the UI reads them. Alloy ships logs to Loki; Grafana reads Prometheus and Loki.">
         <defs>
           <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
@@ -45,7 +45,7 @@ export function ArchitectureDiagram() {
         {/* agent queries Prometheus (arc above) */}
         <path d={`M ${xs[3] + W / 2} ${top} C ${xs[3] + W / 2} ${top - 44}, ${xs[1] + W / 2} ${top - 44}, ${xs[1] + W / 2} ${top - 4}`}
           fill="none" stroke="var(--brand)" strokeWidth={1.3} strokeDasharray="5 4" markerEnd="url(#arr-b)" />
-        <text x={(xs[1] + xs[3]) / 2 + W / 2} y={top - 30} textAnchor="middle" className="arch-edge brand">PromQL</text>
+        <text x={(xs[1] + xs[3]) / 2 + W / 2} y={top - 40} textAnchor="middle" className="arch-edge brand">PromQL</text>
 
         {/* log path: Alloy tails the target's containers into Loki */}
         <path d={`M ${xs[0] + W / 2} ${top + H} L ${xs[0] + W / 2} ${bottom - 26} L ${xs[2] + W / 2} ${bottom - 26} L ${xs[2] + W / 2} ${bottom - 4}`}
