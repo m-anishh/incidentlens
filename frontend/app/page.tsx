@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { AlertState, StatusBadge } from "@/components/StatusBadge";
+import { AlertBadge as AlertState, RunBadge as StatusBadge } from "@/components/StatusBadge";
 import { ago, time } from "@/lib/format";
 import { TERMINAL, type IncidentListItem } from "@/lib/types";
 import { usePoll } from "@/lib/usePoll";

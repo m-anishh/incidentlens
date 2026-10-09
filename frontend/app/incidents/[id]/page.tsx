@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import { Sparkline } from "@/components/Sparkline";
-import { AlertState, StatusBadge } from "@/components/StatusBadge";
+import { AlertBadge as AlertState, RunBadge as StatusBadge } from "@/components/StatusBadge";
 import { labels, time, value } from "@/lib/format";
 import { TERMINAL, type IncidentDetail, type Run, type RunStatus } from "@/lib/types";
 import { usePoll } from "@/lib/usePoll";

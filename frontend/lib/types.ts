@@ -2,12 +2,13 @@
 
 export type RunStatus = "received" | "collecting" | "reasoning" | "complete" | "partial" | "failed";
 export const TERMINAL: RunStatus[] = ["complete", "partial", "failed"];
+export type Confidence = "low" | "medium" | "high";
 
 export interface Report {
   summary: string;
   probable_cause: string;
   cause_service: string;
-  confidence: "low" | "medium" | "high";
+  confidence: Confidence;
   evidence: string[];
   reasoning: string;
   suggested_fix: string;
@@ -52,6 +53,15 @@ export interface Evidence {
   findings: string[];
 }
 
+export interface TraceEvent {
+  at: string;
+  step: string;
+  level: "ok" | "warn" | "error";
+  detail: string;
+  elapsed_ms: number;
+  ms?: number;
+}
+
 export interface RunSummary {
   id: number;
   incident_id: number;
@@ -64,7 +74,10 @@ export interface RunSummary {
   missing_sources: string[];
   weak_baseline: boolean;
   error: { step: string | null; message: string } | null;
+  model: string | null;
   summary: string | null;
+  cause_service: string | null;
+  confidence: Confidence | null;
 }
 
 export interface Run extends RunSummary {
@@ -72,6 +85,7 @@ export interface Run extends RunSummary {
   window_end: string | null;
   evidence: Evidence | null;
   report: Report | null;
+  trace: TraceEvent[];
 }
 
 export interface Incident {
@@ -89,10 +103,20 @@ export interface Incident {
 }
 
 export interface IncidentListItem extends Incident {
+  run_count: number;
   latest_run: RunSummary | null;
 }
 
 export interface IncidentDetail extends Incident {
   notification_count: number;
   runs: Run[];
+}
+
+export interface Stats {
+  total: number;
+  open: number;
+  last_24h: number;
+  investigating: number;
+  runs_24h: Partial<Record<RunStatus, number>>;
+  mean_time_to_resolve_s: number | null;
 }

@@ -1,9 +1,20 @@
-import type { RunStatus } from "@/lib/types";
+import type { Confidence, RunStatus } from "@/lib/types";
 
-export function StatusBadge({ status }: { status: RunStatus | "none" }) {
-  return <span className={`badge badge-${status}`}>{status}</span>;
+/** Investigation status of a run. Never used for alert state. */
+export function RunBadge({ status }: { status: RunStatus | "none" }) {
+  return <span className={`badge st-${status}`}>{status === "none" ? "no run" : status}</span>;
 }
 
-export function AlertState({ open }: { open: boolean }) {
-  return <span className={`badge ${open ? "badge-firing" : "badge-resolved"}`}>{open ? "firing" : "resolved"}</span>;
+/** Whether the alert is still firing. Never used for investigation status. */
+export function AlertBadge({ open }: { open: boolean }) {
+  return <span className={`badge ${open ? "st-firing" : "st-resolved"}`}>{open ? "firing" : "resolved"}</span>;
+}
+
+export function WeakBaselineBadge() {
+  return <span className="badge st-weak" title="The healthy period before the incident is unreliable">weak baseline</span>;
+}
+
+export function ConfidenceText({ confidence }: { confidence: Confidence | null | undefined }) {
+  if (!confidence) return null;
+  return <span className={`conf conf-${confidence}`}>{confidence} confidence</span>;
 }
