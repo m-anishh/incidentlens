@@ -1,6 +1,6 @@
 """Smoke-test the configured LLM: one tiny structured call.
 
-    docker compose exec incidentlens python -m app.reasoner.check
+    python -m app.reasoner.check
 """
 
 import asyncio

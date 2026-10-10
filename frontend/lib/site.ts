@@ -1,5 +1,5 @@
 // Public links. NEXT_PUBLIC_* values are inlined at build time
-// (see .env.example and the ARG in Dockerfile).
+// (set them in the environment before `npm run build`).
 export const REPO_URL = process.env.NEXT_PUBLIC_REPO_URL || "";
 // Empty when there is no repository to link to; the nav and footer then hide "Docs".
 export const DOCS_URL = REPO_URL ? `${REPO_URL.replace(/\/$/, "")}/tree/main/docs` : "";

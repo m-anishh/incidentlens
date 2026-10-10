@@ -8,7 +8,7 @@ import type { IncidentDetail, IncidentListItem, Run } from "@/lib/types";
 // Recorded from the first real scenario-2 investigation (9 Oct 2026, incident
 // #1, DeepSeek V3.2 on Bedrock). Counts and numbers are as that run stored them;
 // per-step timings were not recorded yet, so none are shown. That run is not
-// counted as a pass — see docs/05-agent-design.md.
+// counted as a pass.
 const RECORDED: TraceRow[] = [
   { step: "window", level: "ok", detail: "baseline 12:45–12:55 · onset 12:55–12:59 UTC" },
   { step: "prometheus", level: "ok", detail: "16 queries · latency, errors, calls, pool, cache, DB" },

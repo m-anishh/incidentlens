@@ -1,6 +1,5 @@
 // The failure shapes IncidentLens is built to tell apart. Each is one where the
 // alerting service and the causing service — or route — are not the same.
-// Measured results against these live in docs/05-agent-design.md, not here.
 
 export interface UseCase {
   title: string;

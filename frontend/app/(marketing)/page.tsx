@@ -124,7 +124,7 @@ export default function Landing() {
         <div className="wf-trust">
           <div><strong>Read-only</strong><span>Queries the Prometheus and Loki you already run. Nothing installed on your hosts.</span></div>
           <div><strong>Evidence first</strong><span>Every claim carries its baseline number, and the report lists what it could not see.</span></div>
-          <div><strong>Self-hosted</strong><span>One Compose file, in your own cloud account. Your telemetry never leaves it.</span></div>
+          <div><strong>Self-hosted</strong><span>Runs in your own infrastructure. Your telemetry never leaves it.</span></div>
         </div>
         </div>
       </section>
