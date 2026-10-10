@@ -1,6 +1,25 @@
 """Every endpoint, key and tunable, read from the environment in one place."""
 
 import os
+from pathlib import Path
+
+
+def _load_dotenv() -> None:
+    """Running outside Compose: pick up the repo-root .env. Real env vars win.
+    In the container the file is absent and this is a no-op."""
+    path = Path(__file__).resolve().parents[2] / ".env"
+    if not path.is_file():
+        return
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, value = line.partition("=")
+        value = os.path.expandvars(value.strip().strip('"').strip("'"))  # ${VAR}, as Compose does
+        os.environ.setdefault(key.strip(), value)
+
+
+_load_dotenv()
 
 DATABASE_URL = os.environ.get("DATABASE_URL", "")
 PROMETHEUS_URL = os.environ.get("PROMETHEUS_URL", "http://prometheus:9090")
@@ -18,6 +37,7 @@ BEDROCK_REGION = os.environ.get("BEDROCK_REGION") or "eu-north-1"
 BEDROCK_MODEL = os.environ.get("BEDROCK_MODEL") or "deepseek.v3.2"
 BEDROCK_MAX_TOKENS = int(os.environ.get("BEDROCK_MAX_TOKENS") or "8000")
 GEMINI_MODEL = os.environ.get("GEMINI_MODEL") or "gemini-3.8-flash"
+GEMINI_VERTEX = os.environ.get("GEMINI_VERTEX", "").lower() in ("1", "true", "yes")
 LLM_EFFORT = os.environ.get("LLM_EFFORT", "high")
 LLM_MAX_TOKENS = int(os.environ.get("LLM_MAX_TOKENS", "16000"))
 

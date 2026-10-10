@@ -151,7 +151,8 @@ async def _ask_gemini(prompt, system, json_schema):
 
     global _gemini
     if _gemini is None:
-        _gemini = genai.Client(api_key=config.GEMINI_API_KEY)
+        # GEMINI_VERTEX=1: same key, served by Vertex AI instead of AI Studio.
+        _gemini = genai.Client(api_key=config.GEMINI_API_KEY, vertexai=config.GEMINI_VERTEX or None)
 
     cfg = types.GenerateContentConfig(
         system_instruction=system or None,
