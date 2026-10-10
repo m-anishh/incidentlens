@@ -1,3 +1,0 @@
-# Everything here runs in Linux containers; keep LF regardless of core.autocrlf.
-* text=auto eol=lf
-*.png binary
